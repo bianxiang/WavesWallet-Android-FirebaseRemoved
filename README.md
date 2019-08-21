@@ -1,3 +1,5 @@
+# *_👉Because some area can not connect to firebase,I changed firebase to local database_*
+
 # Waves Wallet on Android
 
 [**Website**](https://wavesplatform.com/) | [**Discord**](https://discord.gg/cnFmDyA) | [**Forum**](https://forum.wavesplatform.com/) | [**Support**](https://support.wavesplatform.com/) | [**Documentation**](https://docs.wavesplatform.com)
