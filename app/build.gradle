@@ -1,0 +1,420 @@
+import com.android.build.OutputFile
+
+apply plugin: 'com.android.application'
+apply plugin: 'io.fabric'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
+apply plugin: 'kotlin-android-extensions'
+apply plugin: "io.gitlab.arturbosch.detekt"
+apply plugin: 'realm-android'
+//apply plugin: 'io.sentry.android.gradle'
+//apply from: 'api-keys.properties'
+apply from: "$rootDir/ktlint.gradle"
+apply from: "$rootDir/detekt.gradle"
+
+apply plugin: "org.jetbrains.kotlin.kapt"
+
+def getGitHash = { ->
+    def stdout = new ByteArrayOutputStream()
+    exec {
+        commandLine 'git', 'rev-parse', '--short', 'HEAD'
+        standardOutput = stdout
+    }
+    return stdout.toString().trim()
+}
+
+android {
+    signingConfigs {
+        config {
+            storeFile file("android.jks")
+            storePassword = "$System.env.KEYSTORE_PASSWORD"
+            keyPassword = "$System.env.KEY_PASSWORD"
+            keyAlias = "$System.env.KEY_ALIAS"
+        }
+    }
+    compileSdkVersion 28
+    buildToolsVersion '28.0.3'
+    flavorDimensions "default"
+    dexOptions {
+        javaMaxHeapSize "6g"
+    }
+    defaultConfig {
+        applicationId "com.wavesplatform.wallet"
+        targetSdkVersion 28
+        minSdkVersion 21
+        versionCode 427
+        versionName "2.5.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        vectorDrawables.useSupportLibrary = true
+        multiDexEnabled true
+        archivesBaseName = "waves-wallet-$versionName"
+//        buildConfigField "String", "APPS_FLYER_KEY", "\"" + appsFlyerKey + "\""
+//        buildConfigField "String", "AMPLITUDE_API_KEY", "\"" + devAmplitudeApiKey + "\""
+        buildConfigField "String", "MONKEY_TEST_SEED", "\"\""
+        manifestPlaceholders = [
+                appIcon     : "@mipmap/ic_launcher",
+                appIconRound: "@mipmap/ic_launcher_round",
+//                fabricApiKey: fabricApiKey
+        ]
+
+//        ndk {
+//            abiFilters "armeabi-v7a", "arm64-v8a", "x86"
+//        }
+    }
+
+    splits {
+        // Configures multiple APKs based on ABI.
+        abi {
+            // Enables building multiple APKs per ABI.
+            enable gradle.startParameter.taskNames.contains("assembleProdRelease")
+
+            // By default all ABIs are included, so use reset() and include to specify that we only
+            // want APKs for x86, armeabi-v7a, and mips.
+            reset()
+
+            // Specifies a list of ABIs that Gradle should create APKs for.
+            include "x86", "x86_64", "armeabi-v7a", "arm64-v8a"
+
+            // Specifies that we want to also generate a universal APK that includes all ABIs.
+            universalApk true
+        }
+    }
+
+    buildTypes {
+        release {
+            debuggable false
+            minifyEnabled false
+            zipAlignEnabled true
+            shrinkResources false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            multiDexEnabled true
+            signingConfig signingConfigs.config
+        }
+        debug {
+            multiDexEnabled false
+        }
+    }
+
+
+    def abiCodes = ['x86': 1, 'x86_64': 2, 'armeabi-v7a': 3, 'arm64-v8a': 4]
+
+    applicationVariants.all { variant ->
+        def version = variant.versionName
+        def gitHash = getGitHash()
+        def buildType = variant.variantData.variantConfiguration.buildType.name
+        def date = new Date()
+        def formattedDate = date.format('dd.MM.yy')
+        variant.outputs.all { output ->
+            def abiName = output.getFilter(OutputFile.ABI)
+            if (abiName == null) {
+                abiName = "universal"
+            }
+            def versionCode = abiCodes.get(abiName, 0) * 100000 + variant.versionCode
+            versionCodeOverride = versionCode
+            def newApkName = "[" + buildType + "|" + version + "|" + versionCode + "|" + gitHash + "|" + abiName + "] " + appName + " (" + formattedDate + ")" + ".apk"
+            outputFileName = newApkName
+        }
+    }
+
+    androidExtensions {
+        experimental = true
+    }
+
+
+    productFlavors {
+        prod {
+            signingConfig signingConfigs.config
+//            buildConfigField "String", "AMPLITUDE_API_KEY", "\"" + prodAmplitudeApiKey + "\""
+            manifestPlaceholders = [
+                    appIcon     : "@mipmap/ic_launcher",
+                    appIconRound: "@mipmap/ic_launcher_round",
+//                    fabricApiKey: fabricApiKey
+            ]
+        }
+        dev {
+            applicationIdSuffix ".dev"
+//            buildConfigField "String", "AMPLITUDE_API_KEY", "\"" + devAmplitudeApiKey + "\""
+            manifestPlaceholders = [
+                    appIcon     : "@mipmap/ic_launcher_dev",
+                    appIconRound: "@mipmap/ic_launcher_dev_round",
+//                    fabricApiKey: fabricApiKey
+            ]
+        }
+        devTest {
+            applicationIdSuffix ".test"
+//            buildConfigField "String", "AMPLITUDE_API_KEY", "\"" + devAmplitudeApiKey + "\""
+            manifestPlaceholders = [
+                    appIcon     : "@mipmap/ic_launcher_test",
+                    appIconRound: "@mipmap/ic_launcher_test_round",
+//                    fabricApiKey: fabricApiKey
+            ]
+        }
+        monkeyTest {
+            applicationIdSuffix ".dev"
+//            buildConfigField "String", "MONKEY_TEST_SEED", "\"" + monkeyTestSeed + "\""
+            manifestPlaceholders = [
+                    appIcon     : "@mipmap/ic_launcher_test",
+                    appIconRound: "@mipmap/ic_launcher_test_round",
+//                    fabricApiKey: fabricApiKey
+            ]
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    lintOptions {
+        ignoreWarnings true
+        checkReleaseBuilds true
+        abortOnError false
+        fatal 'StopShip'
+        warning 'InvalidPackage'
+    }
+    packagingOptions {
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/NOTICE.txt'
+    }
+
+
+    dexOptions {
+        preDexLibraries = false
+        javaMaxHeapSize "4g"
+    }
+
+    androidExtensions {
+        experimental = true
+    }
+
+    dataBinding {
+        enabled = true
+    }
+    // Always show the result of every unit test, even if it passes.
+    testOptions.unitTests {
+        returnDefaultValues = true
+        all {
+            testLogging {
+                events 'passed', 'skipped', 'failed', 'standardOut', 'standardError'
+            }
+            reports.junitXml.destination = file('../build/test-results/')
+            // This allows "unstable" builds on CI rather than straight failures
+            ignoreFailures true
+        }
+    }
+}
+
+
+//sentry {
+//    autoProguardConfig false
+//    autoUpload false
+//}
+
+def getAppName() {
+    def stringsFile = file("./src/main/res/values/strings.xml")
+    String s = new XmlParser().parse(stringsFile).string.find { it.@name.equals 'app_name' }.text()
+    def all = s.replaceAll(" ", "_")
+    return all.replaceAll("\"", "")
+}
+
+kapt {
+    generateStubs = true
+}
+
+
+ext {
+    supportVersion = '28.0.0'
+    rxJavaVersion = '2.2.10'
+    rxAndroidVersion = '2.1.1'
+    daggerVersion = '2.17'
+    retrofitVersion = '2.4.0'
+    okHttpVersion = '3.12.0'
+    glideVersion = '4.8.0'
+    timberVersion = '4.7.1'
+}
+
+dependencies {
+    implementation project(':WavesSDK-android:wavesplatform')
+    implementation 'com.android.support.constraint:constraint-layout:1.1.3'
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "com.android.support:appcompat-v7:$supportVersion"
+    implementation "com.android.support:customtabs:$supportVersion"
+    implementation "com.android.support:recyclerview-v7:$supportVersion"
+    implementation "com.android.support:cardview-v7:$supportVersion"
+    implementation "com.android.support:design:$supportVersion"
+    implementation "com.android.support:support-v13:$supportVersion"
+    implementation "com.android.support:preference-v7:$supportVersion"
+    implementation "com.android.support:preference-v14:$supportVersion"
+    // Enable crash reporting only for release version
+    implementation "com.google.firebase:firebase-core:16.0.9"
+    implementation "com.google.firebase:firebase-database:17.0.0"
+    implementation "com.google.firebase:firebase-messaging:18.0.0"
+    implementation "com.google.firebase:firebase-inappmessaging-display:17.1.1"
+    releaseImplementation "com.google.firebase:firebase-crash:16.2.1"
+    implementation 'commons-io:commons-io:2.4'
+
+    implementation 'com.sdsmdg.harjot:vectormaster:1.1.3'
+
+    implementation 'commons-codec:commons-codec:1.10'
+    implementation 'org.apache.commons:commons-lang3:3.4'
+    implementation 'com.android.support:multidex:1.0.3'
+    implementation 'org.thoughtcrime.ssl.pinning:AndroidPinning:1.0.0'
+    implementation 'com.neovisionaries:nv-websocket-client:1.19'
+    implementation('com.google.zxing:core:3.3.0') {
+        transitive = true
+    }
+
+    implementation 'com.github.andrefrsousa:SuperBottomSheet:1.3.0'
+    implementation 'com.github.pwittchen:reactivenetwork-rx2:3.0.1'
+
+    implementation 'com.amplitude:android-sdk:2.16.0'
+
+    // RxJava
+    implementation "io.reactivex.rxjava2:rxjava:$rxJavaVersion"
+    implementation "io.reactivex.rxjava2:rxandroid:$rxAndroidVersion"
+    implementation 'com.jakewharton.rxbinding2:rxbinding-appcompat-v7:2.0.0'
+    // Retrofit
+    implementation "com.squareup.retrofit2:retrofit:$retrofitVersion"
+    implementation "com.squareup.retrofit2:converter-scalars:$retrofitVersion"
+    implementation "com.squareup.retrofit2:converter-jackson:$retrofitVersion"
+    implementation "com.squareup.retrofit2:converter-gson:$retrofitVersion"
+    implementation "com.squareup.retrofit2:adapter-rxjava2:$retrofitVersion"
+
+    implementation 'com.asksira.android:loopingviewpager:1.1.2'
+    implementation 'com.romandanylyk:pageindicatorview:1.0.2'
+
+    implementation "org.whispersystems:curve25519-java:0.4.1"
+
+    implementation 'com.oushangfeng:PinnedSectionItemDecoration:1.3.2'
+    implementation 'com.github.CymChad:BaseRecyclerViewAdapterHelper:2.9.46'
+    implementation 'jp.wasabeef:recyclerview-animators:2.3.0'
+    debugImplementation 'com.github.markzhai:blockcanary-android:1.5.0'
+    releaseImplementation 'com.github.markzhai:blockcanary-no-op:1.5.0'
+
+    implementation 'io.sentry:sentry-android:1.7.16'
+    implementation 'org.slf4j:slf4j-nop:1.7.25'
+
+    // OkHttp
+    implementation "com.squareup.okhttp3:logging-interceptor:$okHttpVersion"
+    implementation('com.github.ihsanbal:LoggingInterceptor:3.0.0') {
+        exclude group: 'org.json', module: 'json'
+    }
+    implementation "com.squareup.okhttp3:okhttp:$okHttpVersion"
+
+    implementation 'com.github.rubensousa:bottomsheetbuilder:1.6.1'
+    implementation 'com.github.MindorksOpenSource:EditDrawableText:1.2.0'
+
+    implementation 'com.madgag.spongycastle:core:1.58.0.0'
+
+    api 'com.google.guava:guava:27.1-android'
+
+    // Fingerprint authentication
+    implementation 'com.wei.android.lib:fingerprintidentify:1.2.1'
+    implementation "de.adorsys.android:securestoragelibrary:1.0.3"
+
+    implementation 'ren.yale.android:retrofitcachelibrx2:1.0.7'
+    implementation 'com.akexorcist:localizationactivity:1.2.2'
+    implementation 'com.journeyapps:zxing-android-embedded:3.6.0'
+
+    implementation 'org.fingerlinks.mobile.android:Navigator:0.1.5'
+
+    implementation 'com.android.support:multidex:1.0.3'
+
+    implementation 'com.arello-mobile:moxy:1.5.5'
+    implementation 'com.arello-mobile:moxy-app-compat:1.5.5'
+    kapt 'com.arello-mobile:moxy-compiler:1.5.5'
+
+    implementation "com.github.vicpinm:krealmextensions:2.5.0"
+    implementation 'com.yarolegovich:sliding-root-nav:1.1.0'
+    implementation 'io.github.anderscheow:validator:1.1.5'
+
+    implementation 'com.intuit.sdp:sdp-android:1.0.5'
+
+    debugImplementation 'com.squareup.leakcanary:leakcanary-android:1.6.3'
+    debugImplementation 'com.squareup.leakcanary:leakcanary-support-fragment:1.6.3'
+    releaseImplementation 'com.squareup.leakcanary:leakcanary-android-no-op:1.6.3'
+
+    implementation 'com.ethanhua:skeleton:1.1.1'
+    implementation 'io.supercharge:shimmerlayout:2.1.0'
+
+
+    implementation "android.arch.lifecycle:extensions:1.1.1"
+    kapt "android.arch.lifecycle:compiler:1.1.1"
+
+    implementation 'com.github.WindSekirun:RichUtilsKt:2.4.0'
+    implementation 'com.github.VictorChow:kotlin-android-lib:1.2.3'
+
+    implementation "com.google.dagger:dagger:$daggerVersion"
+    kapt "com.google.dagger:dagger-compiler:$daggerVersion"
+    implementation "com.google.dagger:dagger-android:$daggerVersion"
+    implementation "com.google.dagger:dagger-android-support:$daggerVersion"
+    kapt "com.google.dagger:dagger-android-processor:$daggerVersion"
+
+    implementation 'com.pddstudio:encrypted-preferences:1.3.0'
+
+    implementation 'com.tbruyelle.rxpermissions2:rxpermissions:0.9.4@aar'
+
+    implementation "com.github.bumptech.glide:glide:$glideVersion"
+
+    implementation "com.jakewharton.timber:timber:$timberVersion"
+    implementation 'com.novoda:simple-chrome-custom-tabs:0.1.6'
+
+    implementation 'com.flyco.tablayout:FlycoTabLayout_Lib:2.1.2@aar'
+    implementation 'net.cachapa.expandablelayout:expandablelayout:2.9.2'
+
+    implementation 'com.appsflyer:af-android-sdk:4.8.18@aar'
+    implementation 'com.android.installreferrer:installreferrer:1.0'
+
+    // UI/Instrumentation Tests
+    androidTestImplementation 'junit:junit:4.12'
+    androidTestImplementation 'org.mockito:mockito-core:1.10.19'
+    androidTestImplementation 'com.jayway.android.robotium:robotium-solo:5.6.3'
+    androidTestImplementation "com.android.support:support-annotations:$supportVersion"
+    androidTestImplementation 'com.android.support.test:rules:1.0.2'
+    androidTestImplementation('com.android.support.test:runner:0.5') {
+        exclude module: 'support-annotations'
+    }
+    androidTestImplementation('com.android.support.test.espresso:espresso-core:2.2.2') {
+        exclude group: 'javax.inject', module: 'support-annotations'
+    }
+    // Unit Tests
+    testImplementation 'org.json:json:20140107'
+    testImplementation 'org.mockito:mockito-core:1.10.19'
+    testImplementation 'org.hamcrest:hamcrest-junit:2.0.0.0'
+    testImplementation('org.robolectric:robolectric:3.1.4') {
+        exclude group: 'com.google.guava'
+        exclude group: 'com.google.protobuf'
+    }
+    implementation 'com.github.PhilJay:MPAndroidChart:v3.0.2'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+    implementation 'com.google.android:flexbox:1.0.0'
+    implementation "com.daimajia.swipelayout:library:1.2.0@aar"
+    implementation('com.crashlytics.sdk.android:crashlytics:2.9.9@aar') {
+        transitive = true
+    }
+}
+
+buildscript {
+    dependencies {
+        classpath 'io.fabric.tools:gradle:1.+'
+    }
+
+    repositories {
+        jcenter()
+        google()
+        maven { url 'https://maven.fabric.io/public' }
+    }
+}
+
+// Required for RetroLambda && CountryPicker
+repositories {
+    jcenter()
+    google()
+    maven { url "https://jitpack.io" }
+    maven { url "https://maven.google.com" }
+    maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+    maven { url "https://maven.fabric.io/public" }
+}
+
+// This must remain at the bottom of this file until Google work out a better way to do this
+apply plugin: 'com.google.gms.google-services'

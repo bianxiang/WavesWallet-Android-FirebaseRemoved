@@ -1,0 +1,13 @@
+<resources>
+
+    <style name="AppTheme" parent="BaseTheme">
+        <!-- v21 specific styles go here -->
+        <item name="preferenceTheme">@style/PreferenceThemeOverlay.v14.Material</item>
+    </style>
+
+    <style name="DrawerArrowStyle" parent="Widget.AppCompat.DrawerArrowToggle">
+        <item name="spinBars">true</item>
+        <item name="color">@android:color/white</item>
+    </style>
+
+</resources>

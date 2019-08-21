@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/card_history"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginLeft="16dp"
+    android:layout_marginRight="16dp"
+    android:layout_marginBottom="8dp"
+    android:foreground="?attr/selectableItemBackground"
+    app:cardBackgroundColor="@color/white"
+    app:cardCornerRadius="@dimen/asset_item_radius"
+    app:cardElevation="2dp">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingLeft="14dp"
+        android:paddingTop="10dp"
+        android:paddingRight="14dp"
+        android:paddingBottom="10dp">
+
+        <android.support.v7.widget.AppCompatImageView
+            android:id="@+id/image_transaction"
+            android:layout_width="@dimen/asset_icon_size"
+            android:layout_height="@dimen/asset_icon_size"
+            android:layout_centerVertical="true"
+            app:srcCompat="@drawable/ic_t_startlease_48" />
+
+
+        <android.support.v7.widget.AppCompatTextView
+            android:id="@+id/text_transaction_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="8dp"
+            android:gravity="center_vertical"
+            android:layout_marginEnd="4dp"
+            android:layout_toStartOf="@+id/image_info"
+            android:layout_toEndOf="@+id/image_transaction"
+            android:lines="1"
+            android:textColor="@color/disabled500"
+            android:textSize="12sp"
+            app:autoSizeMaxTextSize="12sp"
+            app:autoSizeMinTextSize="10sp"
+            app:autoSizeStepGranularity="1sp"
+            app:autoSizeTextType="uniform"
+            tools:text="Started Leasing" />
+
+        <RelativeLayout
+            android:layout_below="@+id/text_transaction_name"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginEnd="4dp"
+            android:layout_toStartOf="@+id/image_info"
+            android:layout_toEndOf="@+id/image_transaction"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <android.support.v7.widget.AppCompatTextView
+                android:id="@+id/text_transaction_value"
+                android:layout_width="wrap_content"
+                android:lines="1"
+                android:layout_centerVertical="true"
+                android:gravity="center_vertical"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:textColor="@color/black"
+                android:textSize="16sp"
+                app:autoSizeMaxTextSize="16sp"
+                app:autoSizeMinTextSize="10sp"
+                android:layout_marginEnd="55dp"
+                app:autoSizeStepGranularity="1sp"
+                app:autoSizeTextType="uniform"
+                tools:text="1.3423423" />
+
+            <LinearLayout
+                android:id="@+id/linear_tags"
+                android:layout_marginEnd="4dp"
+                android:layout_marginStart="-55dp"
+                android:layout_width="wrap_content"
+                android:layout_centerVertical="true"
+                android:gravity="center_vertical"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@+id/text_transaction_value"
+                android:orientation="horizontal">
+
+                <android.support.v7.widget.AppCompatTextView
+                    android:id="@+id/text_tag"
+                    style="@style/TickerTag"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginStart="4dp"
+                    android:visibility="gone"
+                    tools:text="WAVES"
+                    tools:visibility="visible" />
+
+                <com.wavesplatform.wallet.v2.ui.custom.SpamTag
+                    android:id="@+id/text_tag_spam"
+                    android:layout_width="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_height="wrap_content"
+                    tools:visibility="visible"
+                    android:visibility="gone" />
+
+            </LinearLayout>
+
+        </RelativeLayout>
+
+
+
+        <android.support.v7.widget.AppCompatImageView
+            android:id="@+id/image_info"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            app:srcCompat="@drawable/icon_info_basic_300" />
+    </RelativeLayout>
+
+</android.support.v7.widget.CardView>

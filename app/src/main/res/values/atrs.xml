@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="FloatingActionButton">
+        <attr name="fab_colorPressed" format="color" />
+        <attr name="fab_colorNormal" format="color" />
+        <attr name="fab_icon" format="reference" />
+        <attr name="fab_size" format="enum">
+            <enum name="normal" value="0" />
+            <enum name="mini" value="1" />
+        </attr>
+        <attr name="fab_stroke_visible" format="boolean" />
+    </declare-styleable>
+
+
+    <declare-styleable name="AutoResizeTextView">
+        <!-- Minimum size of the text. -->
+        <attr name="minTextSize" format="float" />
+    </declare-styleable>
+
+    <declare-styleable name="TintableImageView">
+        <attr name="image_tint" format="reference|color" />
+        <attr name="background_tint" format="reference|color" />
+    </declare-styleable>
+    <declare-styleable name="PassCodeEntryKeypad">
+        <attr name="is_fingerprint_available" format="boolean" />
+    </declare-styleable>
+
+
+    <declare-styleable name="ImageProgressBar">
+        <attr name="progress_image" format="reference" />
+        <attr name="progress_text" format="string" />
+        <attr name="progress_text_visibility" format="boolean" />
+        <attr name="progress_text_color" format="reference|color" />
+        <attr name="progress_duration" format="integer" />
+    </declare-styleable>
+
+    <declare-styleable name="AssetAvatarView">
+        <attr name="avatar_text_size" format="dimension" />
+    </declare-styleable>
+    <declare-styleable name="HorizontalScrollViewWrapperWithOpacityEdge">
+        <attr name="left_edge_block_background" format="reference" />
+        <attr name="right_edge_block_background" format="reference" />
+        <attr name="edge_block_width" format="dimension" />
+        <attr name="edge_block_height" format="dimension" />
+    </declare-styleable>
+</resources>

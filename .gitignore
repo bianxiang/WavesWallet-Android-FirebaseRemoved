@@ -1,0 +1,45 @@
+# Built application files
+*.apk
+*.ap_
+
+# Files for the Dalvik VM
+*.dex
+
+# Java class files
+*.class
+
+# Generated files
+bin/
+gen/
+
+# Gradle files
+.gradle/
+build/
+
+# Android Studio
+.idea/
+*.iml
+
+# Local configuration file (sdk path, etc)
+local.properties
+
+# Log Files
+*.log
+
+# Mac OS X clutter
+*.DS_Store
+
+# Firebase config
+google-services.json
+
+# Test Wallet config
+wallet.properties
+
+# Crashlytics config
+fabric.properties
+
+# Sentry config
+sentry.properties
+
+# Api-keys
+api-keys.properties
